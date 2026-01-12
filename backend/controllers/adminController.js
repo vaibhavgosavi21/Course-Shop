@@ -1,0 +1,144 @@
+const User = require('../models/User');
+const Course = require('../models/Course');
+const Order = require('../models/Order');
+const Notification = require('../models/Notification');
+
+const getDashboardStats = async (req, res) => {
+  try {
+    const totalStudents = await User.countDocuments({ role: 'student' });
+    const totalInstructors = await User.countDocuments({ role: 'instructor' });
+    const totalCourses = await Course.countDocuments();
+    const totalTransactions = await Order.countDocuments();
+
+    res.json({
+      success: true,
+      stats: {
+        totalStudents,
+        totalInstructors,
+        totalCourses,
+        totalTransactions
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllInstructors = async (req, res) => {
+  try {
+    const instructors = await User.find({ role: 'instructor' }).select('-password');
+    res.json({ success: true, instructors });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllStudents = async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' }).select('-password');
+    res.json({ success: true, students });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getPendingCourses = async (req, res) => {
+  try {
+    const pendingCourses = await Course.find({ status: 'pending' })
+      .populate('instructorId', 'name email');
+    res.json({ success: true, courses: pendingCourses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const approveCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      { status: 'approved' },
+      { new: true }
+    );
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Send notification to instructor
+    await Notification.create({
+      instructorId: course.instructorId,
+      message: `Your course "${course.courseName}" has been approved and is now live!`
+    });
+
+    res.json({ success: true, message: 'Course approved successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const rejectCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { reason } = req.body;
+    
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      { status: 'rejected' },
+      { new: true }
+    );
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Send notification to instructor
+    await Notification.create({
+      instructorId: course.instructorId,
+      message: `Your course "${course.courseName}" has been rejected. Reason: ${reason || 'No reason provided'}`
+    });
+
+    res.json({ success: true, message: 'Course rejected successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const removeCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findByIdAndDelete(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    res.json({ success: true, message: 'Course removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await Order.find()
+      .populate('studentId', 'name email')
+      .populate('courseId', 'courseName price')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, transactions });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  getDashboardStats,
+  getAllInstructors,
+  getAllStudents,
+  getPendingCourses,
+  approveCourse,
+  rejectCourse,
+  removeCourse,
+  getAllTransactions
+};
