@@ -1,4 +1,4 @@
-#Course Shop
+# Course Shop
 # Course Selling & Buying Platform
 
 A production-ready, role-based Course Selling & Buying Platform built with React.js, Node.js, Express.js, and MongoDB Atlas.
