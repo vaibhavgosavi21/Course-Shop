@@ -132,13 +132,50 @@ const getAllTransactions = async (req, res) => {
   }
 };
 
+const getCourseContent = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Admin has full access to all course content
+    res.json({ success: true, contentUrl: course.courseContentUrl });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllCourses = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = {};
+    
+    if (search) {
+      query.courseName = { $regex: search, $options: 'i' };
+    }
+
+    const courses = await Course.find(query)
+      .populate('instructorId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllInstructors,
   getAllStudents,
   getPendingCourses,
+  getAllCourses,
   approveCourse,
   rejectCourse,
   removeCourse,
-  getAllTransactions
+  getAllTransactions,
+  getCourseContent
 };

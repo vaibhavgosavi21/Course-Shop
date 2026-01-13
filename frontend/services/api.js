@@ -1,9 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+});
+
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Auth API
@@ -18,6 +27,8 @@ export const adminAPI = {
   getInstructors: () => api.get('/admin/instructors'),
   getStudents: () => api.get('/admin/students'),
   getPendingCourses: () => api.get('/admin/courses/pending'),
+  getAllCourses: () => api.get('/admin/courses/all'),
+  getCourseContent: (courseId) => api.get(`/admin/courses/${courseId}/content`),
   approveCourse: (courseId) => api.put(`/admin/courses/${courseId}/approve`),
   rejectCourse: (courseId, reason) => api.put(`/admin/courses/${courseId}/reject`, { reason }),
   removeCourse: (courseId) => api.delete(`/admin/courses/${courseId}`),
@@ -35,6 +46,8 @@ export const instructorAPI = {
   }),
   getNotifications: () => api.get('/instructor/notifications'),
   markNotificationRead: (notificationId) => api.put(`/instructor/notifications/${notificationId}/read`),
+  getAllCourses: () => api.get('/instructor/courses/all'),
+  getCourseContent: (courseId) => api.get(`/instructor/courses/${courseId}/content`),
 };
 
 // Student API
@@ -42,7 +55,9 @@ export const studentAPI = {
   getCourses: (search = '') => api.get(`/student/courses?search=${search}`),
   createPaymentIntent: (courseId) => api.post('/student/payment/create-intent', { courseId }),
   confirmPayment: (paymentIntentId) => api.post('/student/payment/confirm', { paymentIntentId }),
+  directPurchase: (courseId) => api.post('/student/purchase', { courseId }),
   getPurchaseHistory: () => api.get('/student/purchases'),
+  getCourseContent: (courseId) => api.get(`/student/courses/${courseId}/content`),
 };
 
 export default api;

@@ -1,63 +1,31 @@
-.instructor-dashboard {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
-
-.dashboard-header {
-  background: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Navigation Tabs */
+.nav-tabs {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 2rem;
 }
 
-.dashboard-header h1 {
-  margin: 0;
-  color: #333;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.logout-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.dashboard-nav {
-  background: white;
-  padding: 0 2rem;
-  display: flex;
-  gap: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.dashboard-nav button {
+.nav-tabs button {
   background: none;
   border: none;
-  padding: 1rem;
+  padding: 1rem 2rem;
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
 }
 
-.dashboard-nav button.active {
-  border-bottom-color: #667eea;
-  color: #667eea;
+.nav-tabs button.active {
+  color: #1e40af;
+  border-bottom-color: #1e40af;
 }
 
-.dashboard-content {
-  padding: 2rem;
+.nav-tabs button:hover {
+  color: #1e40af;
 }
 
+/* Section Header */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -65,15 +33,28 @@
   margin-bottom: 2rem;
 }
 
-.add-course-btn {
-  background: #28a745;
+.section-header h2 {
+  color: #1f2937;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.add-btn {
+  background: #1f2937;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
+.add-btn:hover {
+  background: #111827;
+}
+
+/* Course Form */
 .course-form-overlay {
   position: fixed;
   top: 0;
@@ -90,13 +71,16 @@
 .course-form {
   background: white;
   padding: 2rem;
-  border-radius: 10px;
+  border-radius: 8px;
   width: 100%;
   max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 .course-form h3 {
   margin-top: 0;
+  color: #1f2937;
+  text-align: center;
 }
 
 .course-form form {
@@ -107,8 +91,27 @@
 
 .course-form input {
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.course-form input:focus {
+  outline: none;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.file-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-input-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
 }
 
 .form-actions {
@@ -120,67 +123,100 @@
   flex: 1;
   padding: 0.75rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
 .form-actions button[type="submit"] {
-  background: #667eea;
+  background: #1f2937;
   color: white;
+}
+
+.form-actions button[type="submit"]:hover {
+  background: #111827;
 }
 
 .form-actions button[type="button"] {
-  background: #6c757d;
+  background: #6b7280;
   color: white;
 }
 
-.courses-grid {
+.form-actions button[type="button"]:hover {
+  background: #4b5563;
+}
+
+/* Course Grid */
+.course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
-.course-card {
+.course-item {
   background: white;
-  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.course-card img {
+.course-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.course-item img {
   width: 100%;
   height: 200px;
   object-fit: cover;
 }
 
-.course-info {
-  padding: 1rem;
+.course-details {
+  padding: 1.5rem;
 }
 
-.course-info h3 {
+.course-details h3 {
   margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.25rem;
 }
 
-.course-info .price {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #28a745;
-  margin: 0.5rem 0;
+.course-details .price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #059669;
+  margin: 0.75rem 0;
 }
 
-.course-info .status {
-  font-weight: bold;
-  margin: 0.5rem 0;
+.course-details .status {
+  font-weight: 500;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
 }
 
 .edit-btn {
-  background: #667eea;
+  background: #1f2937;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
   cursor: pointer;
   width: 100%;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.edit-btn:hover {
+  background: #111827;
+}
+
+/* Notifications */
+.notifications-section h2 {
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
 }
 
 .notifications-list {
@@ -191,26 +227,66 @@
 
 .notification {
   background: white;
-  padding: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
 }
 
 .notification:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .notification.unread {
-  border-left: 4px solid #667eea;
-  background: #f8f9ff;
+  border-left: 4px solid #1e40af;
+  background: #eff6ff;
 }
 
 .notification p {
   margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  line-height: 1.5;
 }
 
 .notification small {
-  color: #666;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-tabs {
+    flex-direction: column;
+  }
+  
+  .nav-tabs button {
+    border-bottom: none;
+    border-left: 2px solid transparent;
+  }
+  
+  .nav-tabs button.active {
+    border-left-color: #1e40af;
+    border-bottom-color: transparent;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .course-form {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
 }

@@ -48,6 +48,7 @@ export const adminAPI = {
   getInstructors: () => api.get('/admin/instructors'),
   getStudents: () => api.get('/admin/students'),
   getPendingCourses: () => api.get('/admin/courses/pending'),
+  getAllCourses: (search = '') => api.get(`/admin/courses/all?search=${encodeURIComponent(search)}`),
   approveCourse: (courseId) => api.put(`/admin/courses/${courseId}/approve`),
   rejectCourse: (courseId, reason) => api.put(`/admin/courses/${courseId}/reject`, { reason }),
   removeCourse: (courseId) => api.delete(`/admin/courses/${courseId}`),
@@ -60,9 +61,11 @@ export const instructorAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getMyCourses: () => api.get('/instructor/courses'),
+  getAllCourses: (search = '') => api.get(`/instructor/courses/all?search=${encodeURIComponent(search)}`),
   updateCourse: (courseId, formData) => api.put(`/instructor/courses/${courseId}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  deleteCourse: (courseId) => api.delete(`/instructor/courses/${courseId}`),
   getNotifications: () => api.get('/instructor/notifications'),
   markNotificationRead: (notificationId) => api.put(`/instructor/notifications/${notificationId}/read`),
 };
@@ -70,6 +73,7 @@ export const instructorAPI = {
 // Student API
 export const studentAPI = {
   getCourses: (search = '') => api.get(`/student/courses?search=${encodeURIComponent(search)}`),
+  getAllCourses: (search = '') => api.get(`/student/courses/all?search=${encodeURIComponent(search)}`),
   createPaymentIntent: (courseId) => api.post('/student/payment/create-intent', { courseId }),
   confirmPayment: (paymentIntentId) => api.post('/student/payment/confirm', { paymentIntentId }),
   getPurchaseHistory: () => api.get('/student/purchases'),

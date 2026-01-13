@@ -15,6 +15,10 @@ const courseSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Course image is required']
   },
+  courseContentUrl: {
+    type: String,
+    required: false
+  },
   instructorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../services/api';
-import Navbar from '../components/Navbar';
+import ConfirmModal from '../components/ConfirmModal';
 import Footer from '../components/Footer';
 import './AdminDashboard.css';
 
@@ -10,10 +10,13 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({});
   const [pendingCourses, setPendingCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [students, setStudents] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, courseId: null, courseName: '' });
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, courseId: null, reason: '' });
 
   useEffect(() => {
     loadDashboardData();
@@ -21,9 +24,10 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [statsRes, coursesRes, instructorsRes, studentsRes, transactionsRes] = await Promise.all([
+      const [statsRes, coursesRes, allCoursesRes, instructorsRes, studentsRes, transactionsRes] = await Promise.all([
         adminAPI.getDashboard(),
         adminAPI.getPendingCourses(),
+        adminAPI.getAllCourses(),
         adminAPI.getInstructors(),
         adminAPI.getStudents(),
         adminAPI.getTransactions()
@@ -31,6 +35,7 @@ const AdminDashboard = () => {
 
       setStats(statsRes.data.stats);
       setPendingCourses(coursesRes.data.courses);
+      setAllCourses(allCoursesRes.data.courses);
       setInstructors(instructorsRes.data.instructors);
       setStudents(studentsRes.data.students);
       setTransactions(transactionsRes.data.transactions);
@@ -50,33 +55,52 @@ const AdminDashboard = () => {
   };
 
   const handleRejectCourse = async (courseId) => {
-    const reason = prompt('Enter rejection reason:');
-    if (!reason) return;
+    setRejectModal({ isOpen: true, courseId, reason: '' });
+  };
+
+  const confirmRejectCourse = async () => {
+    if (!rejectModal.reason.trim()) {
+      toast.error('Please enter a rejection reason');
+      return;
+    }
 
     try {
-      await adminAPI.rejectCourse(courseId, reason);
+      await adminAPI.rejectCourse(rejectModal.courseId, rejectModal.reason);
       toast.success('Course rejected successfully');
       loadDashboardData();
     } catch (error) {
       toast.error('Failed to reject course');
+    } finally {
+      setRejectModal({ isOpen: false, courseId: null, reason: '' });
     }
   };
 
-  const handleRemoveCourse = async (courseId) => {
-    if (!window.confirm('Are you sure you want to remove this course?')) return;
+  const handleAccessContent = async (courseId, contentUrl) => {
+    if (contentUrl) {
+      window.open(`http://localhost:5001${contentUrl}`, '_blank');
+    } else {
+      toast.info('No course content available');
+    }
+  };
 
+  const handleRemoveCourse = async (courseId, courseName) => {
+    setConfirmModal({ isOpen: true, courseId, courseName });
+  };
+
+  const confirmRemoveCourse = async () => {
     try {
-      await adminAPI.removeCourse(courseId);
+      await adminAPI.removeCourse(confirmModal.courseId);
       toast.success('Course removed successfully');
       loadDashboardData();
     } catch (error) {
       toast.error('Failed to remove course');
+    } finally {
+      setConfirmModal({ isOpen: false, courseId: null, courseName: '' });
     }
   };
 
   return (
     <div className="admin-dashboard">
-      <Navbar />
       <div className="dashboard-wrapper">
       <header className="dashboard-header">
         <h1>Admin Dashboard</h1>
@@ -98,6 +122,12 @@ const AdminDashboard = () => {
           onClick={() => setActiveTab('courses')}
         >
           Pending Courses
+        </button>
+        <button 
+          className={activeTab === 'allcourses' ? 'active' : ''}
+          onClick={() => setActiveTab('allcourses')}
+        >
+          All Courses
         </button>
         <button 
           className={activeTab === 'instructors' ? 'active' : ''}
@@ -173,8 +203,69 @@ const AdminDashboard = () => {
                       >
                         Reject
                       </button>
+                      {course.courseContentUrl && (
+                        <button 
+                          onClick={() => handleAccessContent(course._id, course.courseContentUrl)}
+                          className="access-btn"
+                        >
+                          View Content
+                        </button>
+                      )}
                       <button 
-                        onClick={() => handleRemoveCourse(course._id)}
+                        onClick={() => handleRemoveCourse(course._id, course.courseName)}
+                        className="remove-btn"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'allcourses' && (
+          <div className="courses-section">
+            <h2>All Courses</h2>
+            {allCourses.length === 0 ? (
+              <p>No courses found</p>
+            ) : (
+              <div className="courses-grid">
+                {allCourses.map(course => (
+                  <div key={course._id} className="course-card">
+                    <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                    <h3>{course.courseName}</h3>
+                    <p>Price: ${course.price}</p>
+                    <p>Educator: {course.instructorId.name}</p>
+                    <p className={`status ${course.status}`}>Status: {course.status}</p>
+                    <div className="course-actions">
+                      {course.status === 'pending' && (
+                        <>
+                          <button 
+                            onClick={() => handleApproveCourse(course._id)}
+                            className="approve-btn"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={() => handleRejectCourse(course._id)}
+                            className="reject-btn"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {course.courseContentUrl && (
+                        <button 
+                          onClick={() => handleAccessContent(course._id, course.courseContentUrl)}
+                          className="access-btn"
+                        >
+                          View Content
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleRemoveCourse(course._id, course.courseName)}
                         className="remove-btn"
                       >
                         Remove
@@ -304,6 +395,40 @@ const AdminDashboard = () => {
       </main>
       </div>
       <Footer />
+      
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title="Remove Course"
+        message={`Are you sure you want to remove "${confirmModal.courseName}"? This action cannot be undone.`}
+        onConfirm={confirmRemoveCourse}
+        onCancel={() => setConfirmModal({ isOpen: false, courseId: null, courseName: '' })}
+      />
+      
+      {rejectModal.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Reject Course</h3>
+            <p>Please provide a reason for rejecting this course:</p>
+            <textarea
+              value={rejectModal.reason}
+              onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
+              placeholder="Enter rejection reason..."
+              rows="4"
+            />
+            <div className="modal-actions">
+              <button onClick={confirmRejectCourse} className="confirm-btn">
+                Reject Course
+              </button>
+              <button 
+                onClick={() => setRejectModal({ isOpen: false, courseId: null, reason: '' })}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

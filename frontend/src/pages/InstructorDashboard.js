@@ -2,20 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { instructorAPI } from '../services/api';
+import ConfirmModal from '../components/ConfirmModal';
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
   const { user, logout } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [activeTab, setActiveTab] = useState('courses');
+  const [activeTab, setActiveTab] = useState('mycourses');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [formData, setFormData] = useState({
     courseName: '',
     price: '',
-    image: null
+    image: null,
+    courseContent: null
   });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, course: null });
 
   useEffect(() => {
     loadData();
@@ -23,12 +27,14 @@ const InstructorDashboard = () => {
 
   const loadData = async () => {
     try {
-      const [coursesRes, notificationsRes] = await Promise.all([
+      const [coursesRes, allCoursesRes, notificationsRes] = await Promise.all([
         instructorAPI.getMyCourses(),
+        instructorAPI.getAllCourses(),
         instructorAPI.getNotifications()
       ]);
 
       setCourses(coursesRes.data.courses);
+      setAllCourses(allCoursesRes.data.courses);
       setNotifications(notificationsRes.data.notifications);
     } catch (error) {
       toast.error('Failed to load data');
@@ -36,10 +42,10 @@ const InstructorDashboard = () => {
   };
 
   const handleInputChange = (e) => {
-    if (e.target.name === 'image') {
+    if (e.target.name === 'image' || e.target.name === 'courseContent') {
       setFormData({
         ...formData,
-        image: e.target.files[0]
+        [e.target.name]: e.target.files[0]
       });
     } else {
       setFormData({
@@ -58,6 +64,9 @@ const InstructorDashboard = () => {
     if (formData.image) {
       data.append('image', formData.image);
     }
+    if (formData.courseContent) {
+      data.append('courseContent', formData.courseContent);
+    }
 
     try {
       if (editingCourse) {
@@ -68,7 +77,7 @@ const InstructorDashboard = () => {
         toast.success('Course submitted for approval');
       }
 
-      setFormData({ courseName: '', price: '', image: null });
+      setFormData({ courseName: '', price: '', image: null, courseContent: null });
       setShowAddForm(false);
       setEditingCourse(null);
       loadData();
@@ -82,9 +91,37 @@ const InstructorDashboard = () => {
     setFormData({
       courseName: course.courseName,
       price: course.price,
-      image: null
+      image: null,
+      courseContent: null
     });
     setShowAddForm(true);
+  };
+
+  const handleDelete = async (course) => {
+    setConfirmModal({ isOpen: true, course });
+  };
+
+  const handleAccessContent = async (courseId) => {
+    try {
+      const response = await instructorAPI.getCourseContent(courseId);
+      if (response.data.success && response.data.contentUrl) {
+        window.open(`http://localhost:5001${response.data.contentUrl}`, '_blank');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Access denied');
+    }
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await instructorAPI.deleteCourse(confirmModal.course._id);
+      toast.success('Course deleted successfully');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete course');
+    } finally {
+      setConfirmModal({ isOpen: false, course: null });
+    }
   };
 
   const markNotificationRead = async (notificationId) => {
@@ -117,10 +154,16 @@ const InstructorDashboard = () => {
 
       <nav className="dashboard-nav">
         <button 
-          className={activeTab === 'courses' ? 'active' : ''}
-          onClick={() => setActiveTab('courses')}
+          className={activeTab === 'mycourses' ? 'active' : ''}
+          onClick={() => setActiveTab('mycourses')}
         >
           My Courses
+        </button>
+        <button 
+          className={activeTab === 'allcourses' ? 'active' : ''}
+          onClick={() => setActiveTab('allcourses')}
+        >
+          Browse Courses
         </button>
         <button 
           className={activeTab === 'notifications' ? 'active' : ''}
@@ -137,7 +180,7 @@ const InstructorDashboard = () => {
       </nav>
 
       <main className="dashboard-content">
-        {activeTab === 'courses' && (
+        {activeTab === 'mycourses' && (
           <div className="courses-section">
             <div className="section-header">
               <h2>My Courses</h2>
@@ -178,6 +221,15 @@ const InstructorDashboard = () => {
                       onChange={handleInputChange}
                       required={!editingCourse}
                     />
+                    <div className="file-input-group">
+                      <label>Course Content (PDF, Video, ZIP):</label>
+                      <input
+                        type="file"
+                        name="courseContent"
+                        accept=".pdf,.mp4,.avi,.mov,.zip"
+                        onChange={handleInputChange}
+                      />
+                    </div>
                     <div className="form-actions">
                       <button type="submit">
                         {editingCourse ? 'Update Course' : 'Add Course'}
@@ -187,7 +239,7 @@ const InstructorDashboard = () => {
                         onClick={() => {
                           setShowAddForm(false);
                           setEditingCourse(null);
-                          setFormData({ courseName: '', price: '', image: null });
+                          setFormData({ courseName: '', price: '', image: null, courseContent: null });
                         }}
                       >
                         Cancel
@@ -211,12 +263,55 @@ const InstructorDashboard = () => {
                     >
                       Status: {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
                     </p>
-                    <button 
-                      onClick={() => handleEdit(course)}
-                      className="edit-btn"
+                    <div className="course-actions">
+                      <button 
+                        onClick={() => handleEdit(course)}
+                        className="edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(course)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                      {course.courseContentUrl && (
+                        <button 
+                          onClick={() => handleAccessContent(course._id)}
+                          className="access-btn"
+                        >
+                          Access Content
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'allcourses' && (
+          <div className="courses-section">
+            <div className="section-header">
+              <h2>Browse Courses</h2>
+            </div>
+
+            <div className="courses-grid">
+              {allCourses.map(course => (
+                <div key={course._id} className="course-card">
+                  <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                  <div className="course-info">
+                    <h3>{course.courseName}</h3>
+                    <p className="instructor">By: {course.instructorId.name}</p>
+                    <p className="price">${course.price}</p>
+                    <p 
+                      className="status"
+                      style={{ color: getStatusColor(course.status) }}
                     >
-                      Edit
-                    </button>
+                      Status: {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -281,6 +376,14 @@ const InstructorDashboard = () => {
           </div>
         )}
       </main>
+      
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title="Delete Course"
+        message={`Are you sure you want to delete "${confirmModal.course?.courseName}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmModal({ isOpen: false, course: null })}
+      />
     </div>
   );
 };

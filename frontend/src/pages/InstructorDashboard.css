@@ -111,6 +111,18 @@
   border-radius: 5px;
 }
 
+.file-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-input-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
 .form-actions {
   display: flex;
   gap: 1rem;
@@ -180,7 +192,44 @@
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
+  width: 48%;
+  margin-right: 4%;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 48%;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.access-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
   width: 100%;
+  margin-top: 0.5rem;
+}
+
+.access-btn:hover {
+  background: #218838;
+}
+
+.course-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .notifications-list {

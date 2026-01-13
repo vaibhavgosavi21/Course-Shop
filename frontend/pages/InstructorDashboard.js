@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { instructorAPI } from '../services/api';
+import DashboardLayout from '../components/DashboardLayout';
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('courses');
@@ -14,7 +15,8 @@ const InstructorDashboard = () => {
   const [formData, setFormData] = useState({
     courseName: '',
     price: '',
-    image: null
+    image: null,
+    courseContent: null
   });
 
   useEffect(() => {
@@ -36,10 +38,10 @@ const InstructorDashboard = () => {
   };
 
   const handleInputChange = (e) => {
-    if (e.target.name === 'image') {
+    if (e.target.name === 'image' || e.target.name === 'courseContent') {
       setFormData({
         ...formData,
-        image: e.target.files[0]
+        [e.target.name]: e.target.files[0]
       });
     } else {
       setFormData({
@@ -58,6 +60,9 @@ const InstructorDashboard = () => {
     if (formData.image) {
       data.append('image', formData.image);
     }
+    if (formData.courseContent) {
+      data.append('courseContent', formData.courseContent);
+    }
 
     try {
       if (editingCourse) {
@@ -68,7 +73,7 @@ const InstructorDashboard = () => {
         toast.success('Course submitted for approval');
       }
 
-      setFormData({ courseName: '', price: '', image: null });
+      setFormData({ courseName: '', price: '', image: null, courseContent: null });
       setShowAddForm(false);
       setEditingCourse(null);
       loadData();
@@ -82,7 +87,8 @@ const InstructorDashboard = () => {
     setFormData({
       courseName: course.courseName,
       price: course.price,
-      image: null
+      image: null,
+      courseContent: null
     });
     setShowAddForm(true);
   };
@@ -106,16 +112,8 @@ const InstructorDashboard = () => {
   };
 
   return (
-    <div className="instructor-dashboard">
-      <header className="dashboard-header">
-        <h1>Instructor Dashboard</h1>
-        <div className="header-actions">
-          <span>Welcome, {user?.name}</span>
-          <button onClick={logout} className="logout-btn">Logout</button>
-        </div>
-      </header>
-
-      <nav className="dashboard-nav">
+    <DashboardLayout title="INSTRUCTOR DASHBOARD" userRole="Instructor">
+      <nav className="nav-tabs">
         <button 
           className={activeTab === 'courses' ? 'active' : ''}
           onClick={() => setActiveTab('courses')}
@@ -130,14 +128,14 @@ const InstructorDashboard = () => {
         </button>
       </nav>
 
-      <main className="dashboard-content">
+      <main className="main-section">
         {activeTab === 'courses' && (
           <div className="courses-section">
             <div className="section-header">
               <h2>My Courses</h2>
               <button 
                 onClick={() => setShowAddForm(true)}
-                className="add-course-btn"
+                className="add-btn"
               >
                 Add New Course
               </button>
@@ -165,13 +163,25 @@ const InstructorDashboard = () => {
                       required
                       min="0"
                     />
-                    <input
-                      type="file"
-                      name="image"
-                      accept="image/*"
-                      onChange={handleInputChange}
-                      required={!editingCourse}
-                    />
+                    <div className="file-input-group">
+                      <label>Course Profile Image:</label>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={handleInputChange}
+                        required={!editingCourse}
+                      />
+                    </div>
+                    <div className="file-input-group">
+                      <label>Course Content (PDF, Video, ZIP):</label>
+                      <input
+                        type="file"
+                        name="courseContent"
+                        accept=".pdf,.mp4,.avi,.mov,.zip"
+                        onChange={handleInputChange}
+                      />
+                    </div>
                     <div className="form-actions">
                       <button type="submit">
                         {editingCourse ? 'Update Course' : 'Add Course'}
@@ -181,7 +191,7 @@ const InstructorDashboard = () => {
                         onClick={() => {
                           setShowAddForm(false);
                           setEditingCourse(null);
-                          setFormData({ courseName: '', price: '', image: null });
+                          setFormData({ courseName: '', price: '', image: null, courseContent: null });
                         }}
                       >
                         Cancel
@@ -192,11 +202,11 @@ const InstructorDashboard = () => {
               </div>
             )}
 
-            <div className="courses-grid">
+            <div className="course-grid">
               {courses.map(course => (
-                <div key={course._id} className="course-card">
-                  <img src={`http://localhost:5000${course.imageUrl}`} alt={course.courseName} />
-                  <div className="course-info">
+                <div key={course._id} className="course-item">
+                  <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                  <div className="course-details">
                     <h3>{course.courseName}</h3>
                     <p className="price">${course.price}</p>
                     <p 
@@ -240,7 +250,7 @@ const InstructorDashboard = () => {
           </div>
         )}
       </main>
-    </div>
+    </DashboardLayout>
   );
 };
 

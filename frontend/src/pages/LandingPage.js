@@ -16,7 +16,7 @@ const LandingPage = () => {
       <Navbar />
       <div className="landing-content">
         <div className="container">
-          <h1>Course Selling Platform</h1>
+          <h1>The Course Shop</h1>
           <p>Choose your role to continue</p>
           
           <div className="role-cards">

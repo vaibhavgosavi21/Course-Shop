@@ -14,16 +14,28 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'course-' + uniqueSuffix + path.extname(file.originalname));
+    const prefix = file.fieldname === 'image' ? 'course-' : 'content-';
+    cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
+  if (file.fieldname === 'image') {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed for course image!'), false);
+    }
+  } else if (file.fieldname === 'courseContent') {
+    const allowedTypes = ['application/pdf', 'video/mp4', 'video/avi', 'video/mov', 'application/zip', 'application/x-zip-compressed'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF, MP4, AVI, MOV, or ZIP files are allowed for course content!'), false);
+    }
   } else {
-    cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed!'), false);
+    cb(new Error('Invalid field name!'), false);
   }
 };
 
@@ -31,7 +43,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 100 * 1024 * 1024 // 100MB limit for course content
   }
 });
 

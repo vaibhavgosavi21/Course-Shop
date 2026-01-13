@@ -21,6 +21,25 @@ const getApprovedCourses = async (req, res) => {
   }
 };
 
+const getAllCourses = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = {};
+    
+    if (search) {
+      query.courseName = { $regex: search, $options: 'i' };
+    }
+
+    const courses = await Course.find(query)
+      .populate('instructorId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const createPaymentIntent = async (req, res) => {
   try {
     const { courseId } = req.body;
@@ -99,9 +118,49 @@ const getPurchaseHistory = async (req, res) => {
   }
 };
 
+const directPurchase = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    
+    const course = await Course.findById(courseId);
+    if (!course || course.status !== 'approved') {
+      return res.status(404).json({ message: 'Course not found or not available' });
+    }
+
+    // Check if student already purchased this course
+    const existingOrder = await Order.findOne({
+      studentId: req.user._id,
+      courseId: courseId,
+      status: 'success'
+    });
+
+    if (existingOrder) {
+      return res.status(400).json({ message: 'You have already purchased this course' });
+    }
+
+    const order = await Order.create({
+      studentId: req.user._id,
+      courseId: courseId,
+      paymentId: 'direct_' + Date.now(),
+      amount: course.price,
+      status: 'success'
+    });
+
+    res.json({
+      success: true,
+      message: 'Course purchased successfully',
+      order
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getApprovedCourses,
+  getAllCourses,
   createPaymentIntent,
   confirmPayment,
+  directPurchase,
   getPurchaseHistory
 };

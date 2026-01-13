@@ -5,10 +5,12 @@ const {
   getAllInstructors,
   getAllStudents,
   getPendingCourses,
+  getAllCourses,
   approveCourse,
   rejectCourse,
   removeCourse,
-  getAllTransactions
+  getAllTransactions,
+  getCourseContent
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -19,7 +21,9 @@ router.use(auth, authorize('admin'));
 router.get('/dashboard', getDashboardStats);
 router.get('/instructors', getAllInstructors);
 router.get('/students', getAllStudents);
+router.get('/courses/all', getAllCourses);
 router.get('/courses/pending', getPendingCourses);
+router.get('/courses/:courseId/content', getCourseContent);
 router.put('/courses/:courseId/approve', approveCourse);
 router.put('/courses/:courseId/reject', rejectCourse);
 router.delete('/courses/:courseId', removeCourse);

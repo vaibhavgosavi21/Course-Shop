@@ -4,6 +4,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { studentAPI } from '../services/api';
+import DashboardLayout from '../components/DashboardLayout';
 import './StudentDashboard.css';
 
 const stripePromise = loadStripe('pk_test_your_stripe_publishable_key_here');
@@ -95,7 +96,7 @@ const PaymentForm = ({ course, onSuccess, onCancel }) => {
 };
 
 const StudentDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [activeTab, setActiveTab] = useState('courses');
@@ -150,16 +151,8 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="student-dashboard">
-      <header className="dashboard-header">
-        <h1>Student Dashboard</h1>
-        <div className="header-actions">
-          <span>Welcome, {user?.name}</span>
-          <button onClick={logout} className="logout-btn">Logout</button>
-        </div>
-      </header>
-
-      <nav className="dashboard-nav">
+    <DashboardLayout title="STUDENT DASHBOARD" userRole="Student">
+      <nav className="nav-tabs">
         <button 
           className={activeTab === 'courses' ? 'active' : ''}
           onClick={() => setActiveTab('courses')}
@@ -174,7 +167,7 @@ const StudentDashboard = () => {
         </button>
       </nav>
 
-      <main className="dashboard-content">
+      <main className="main-section">
         {activeTab === 'courses' && (
           <div className="courses-section">
             <div className="search-section">
@@ -187,11 +180,11 @@ const StudentDashboard = () => {
               />
             </div>
 
-            <div className="courses-grid">
+            <div className="course-grid">
               {courses.map(course => (
-                <div key={course._id} className="course-card">
+                <div key={course._id} className="course-item">
                   <img src={`http://localhost:5000${course.imageUrl}`} alt={course.courseName} />
-                  <div className="course-info">
+                  <div className="course-details">
                     <h3>{course.courseName}</h3>
                     <p className="instructor">By: {course.instructorId.name}</p>
                     <p className="price">${course.price}</p>
@@ -221,19 +214,22 @@ const StudentDashboard = () => {
             {purchases.length === 0 ? (
               <p>No purchases yet</p>
             ) : (
-              <div className="purchases-grid">
+              <div className="purchase-grid">
                 {purchases.map(purchase => (
-                  <div key={purchase._id} className="purchase-card">
+                  <div key={purchase._id} className="purchase-item">
                     <img 
                       src={`http://localhost:5000${purchase.courseId.imageUrl}`} 
                       alt={purchase.courseId.courseName} 
                     />
-                    <div className="purchase-info">
+                    <div className="purchase-details">
                       <h3>{purchase.courseId.courseName}</h3>
                       <p className="amount">Paid: ${purchase.amount}</p>
                       <p className="date">
                         Purchased: {new Date(purchase.createdAt).toLocaleDateString()}
                       </p>
+                      <button className="access-btn">
+                        Access Course
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -252,7 +248,7 @@ const StudentDashboard = () => {
           />
         </Elements>
       )}
-    </div>
+    </DashboardLayout>
   );
 };
 

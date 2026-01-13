@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { studentAPI } from '../services/api';
@@ -8,44 +6,18 @@ import { getImageUrl } from '../utils/helpers';
 import scannerImage from '../assets/images/Scanner.jfif';
 import './StudentDashboard.css';
 
-const stripePromise = loadStripe('pk_test_your_stripe_publishable_key_here');
-
 const PaymentForm = ({ course, onSuccess, onCancel }) => {
-  const stripe = useStripe();
-  const elements = useElements();
   const [processing, setProcessing] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!stripe || !elements) return;
-
+  const handleQRPayment = async () => {
     setProcessing(true);
-
-    try {
-      // Create payment intent
-      const { data } = await studentAPI.createPaymentIntent(course._id);
-      
-      // Confirm payment
-      const result = await stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-        }
-      });
-
-      if (result.error) {
-        toast.error(result.error.message);
-      } else {
-        // Confirm payment on backend
-        await studentAPI.confirmPayment(result.paymentIntent.id);
-        toast.success('Payment successful! Course purchased.');
-        onSuccess();
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Payment failed');
-    }
-
-    setProcessing(false);
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      toast.success('Payment successful! Course purchased.');
+      onSuccess();
+      setProcessing(false);
+    }, 1000);
   };
 
   return (
@@ -57,51 +29,27 @@ const PaymentForm = ({ course, onSuccess, onCancel }) => {
           <p>Price: ${course.price}</p>
         </div>
         
-        <div className="payment-options">
-          <div className="card-payment">
-            <h4>Pay with Card</h4>
-            <form onSubmit={handleSubmit}>
-              <div className="card-element">
-                <CardElement
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#424770',
-                        '::placeholder': {
-                          color: '#aab7c4',
-                        },
-                      },
-                    },
-                  }}
-                />
-              </div>
-              
-              <div className="payment-actions">
-                <button 
-                  type="submit" 
-                  disabled={!stripe || processing}
-                  className="pay-btn"
-                >
-                  {processing ? 'Processing...' : `Pay $${course.price}`}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={onCancel}
-                  className="cancel-btn"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        <div className="qr-payment">
+          <h4>Scan to Pay</h4>
+          <div className="qr-code">
+            <img src={scannerImage} alt="Payment QR Code" />
+            <p>Scan this QR code with your mobile payment app</p>
           </div>
           
-          <div className="qr-payment">
-            <h4>Or Scan to Pay</h4>
-            <div className="qr-code">
-              <img src={scannerImage} alt="Payment QR Code" />
-              <p>Scan this QR code with your mobile payment app</p>
-            </div>
+          <div className="payment-actions">
+            <button 
+              onClick={handleQRPayment}
+              disabled={processing}
+              className="pay-btn"
+            >
+              {processing ? 'Processing Payment...' : `Confirm Payment $${course.price}`}
+            </button>
+            <button 
+              onClick={onCancel}
+              className="cancel-btn"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -155,9 +103,25 @@ const StudentDashboard = () => {
     }
   };
 
+  const handleAccessContent = async (contentUrl) => {
+    if (contentUrl) {
+      window.open(`http://localhost:5001${contentUrl}`, '_blank');
+    } else {
+      toast.info('No course content available');
+    }
+  };
+
   const handlePurchaseSuccess = () => {
+    // Add the purchased course to local state
+    const newPurchase = {
+      _id: Date.now().toString(),
+      courseId: selectedCourse,
+      amount: selectedCourse.price,
+      status: 'success',
+      createdAt: new Date().toISOString()
+    };
+    setPurchases(prev => [newPurchase, ...prev]);
     setSelectedCourse(null);
-    loadData();
   };
 
   const isPurchased = (courseId) => {
@@ -265,6 +229,14 @@ const StudentDashboard = () => {
                       <p className="date">
                         Purchased: {new Date(purchase.createdAt).toLocaleDateString()}
                       </p>
+                      {purchase.courseId.courseContentUrl && (
+                        <button 
+                          onClick={() => handleAccessContent(purchase.courseId.courseContentUrl)}
+                          className="access-btn"
+                        >
+                          Access Content
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -310,13 +282,11 @@ const StudentDashboard = () => {
       </main>
 
       {selectedCourse && (
-        <Elements stripe={stripePromise}>
-          <PaymentForm
-            course={selectedCourse}
-            onSuccess={handlePurchaseSuccess}
-            onCancel={() => setSelectedCourse(null)}
-          />
-        </Elements>
+        <PaymentForm
+          course={selectedCourse}
+          onSuccess={handlePurchaseSuccess}
+          onCancel={() => setSelectedCourse(null)}
+        />
       )}
     </div>
   );

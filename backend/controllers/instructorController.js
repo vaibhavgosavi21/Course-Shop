@@ -5,16 +5,22 @@ const addCourse = async (req, res) => {
   try {
     const { courseName, price } = req.body;
     
-    if (!req.file) {
+    if (!req.files || !req.files.image) {
       return res.status(400).json({ message: 'Course image is required' });
     }
 
-    const course = await Course.create({
+    const courseData = {
       courseName,
       price,
-      imageUrl: `/uploads/${req.file.filename}`,
+      imageUrl: `/uploads/${req.files.image[0].filename}`,
       instructorId: req.user._id
-    });
+    };
+
+    if (req.files.courseContent) {
+      courseData.courseContentUrl = `/uploads/${req.files.courseContent[0].filename}`;
+    }
+
+    const course = await Course.create(courseData);
 
     res.status(201).json({
       success: true,
@@ -50,8 +56,13 @@ const updateCourse = async (req, res) => {
     }
 
     const updateData = { courseName, price };
-    if (req.file) {
-      updateData.imageUrl = `/uploads/${req.file.filename}`;
+    if (req.files) {
+      if (req.files.image) {
+        updateData.imageUrl = `/uploads/${req.files.image[0].filename}`;
+      }
+      if (req.files.courseContent) {
+        updateData.courseContentUrl = `/uploads/${req.files.courseContent[0].filename}`;
+      }
     }
 
     const updatedCourse = await Course.findByIdAndUpdate(
@@ -97,10 +108,85 @@ const markNotificationRead = async (req, res) => {
   }
 };
 
+const getAllCourses = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = { status: 'approved' };
+    
+    if (search) {
+      query.courseName = { $regex: search, $options: 'i' };
+    }
+
+    const courses = await Course.find(query)
+      .populate('instructorId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    
+    const course = await Course.findOneAndDelete({
+      _id: courseId,
+      instructorId: req.user._id
+    });
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found or unauthorized' });
+    }
+
+    res.json({ success: true, message: 'Course deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getCourseContent = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if user is the instructor of this course
+    if (course.instructorId.toString() === req.user._id.toString()) {
+      return res.json({ success: true, contentUrl: course.courseContentUrl });
+    }
+
+    // Check if student has purchased this course
+    if (req.user.role === 'student') {
+      const Order = require('../models/Order');
+      const purchase = await Order.findOne({
+        studentId: req.user._id,
+        courseId: courseId,
+        status: 'success'
+      });
+
+      if (purchase) {
+        return res.json({ success: true, contentUrl: course.courseContentUrl });
+      }
+    }
+
+    res.status(403).json({ message: 'Access denied. Purchase required.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addCourse,
   getMyCourses,
   updateCourse,
+  deleteCourse,
   getNotifications,
-  markNotificationRead
+  markNotificationRead,
+  getAllCourses,
+  getCourseContent
 };
