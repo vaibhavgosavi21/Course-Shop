@@ -1,4 +1,5 @@
-# Course Selling & Buying Platform
+# Course Shop
+# Created Course Selling & Buying Platform using MERN
 
 A production-ready, role-based Course Selling & Buying Platform built with React.js, Node.js, Express.js, and MongoDB Atlas.
 
