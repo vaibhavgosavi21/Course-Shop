@@ -154,38 +154,92 @@
   cursor: pointer;
 }
 
-.users-table, .transactions-table {
+.users-table {
   background: white;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.users-table table, .transactions-table table {
+.users-table table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.users-table th, .users-table td,
-.transactions-table th, .transactions-table td {
+.users-table th,
+.users-table td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
-.users-table th, .transactions-table th {
+.users-table th {
   background: #f8f9fa;
   font-weight: bold;
+  color: #555;
+}
+
+.users-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.transactions-section {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.transactions-section h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.transactions-table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.transactions-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-table th,
+.transactions-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.transactions-table th {
+  background: #f8f9fa;
+  font-weight: bold;
+  color: #555;
+}
+
+.transactions-table tbody tr:hover {
+  background: #f8f9fa;
 }
 
 .status.success {
   color: #28a745;
   font-weight: bold;
+  text-transform: capitalize;
 }
 
 .status.failed {
   color: #dc3545;
   font-weight: bold;
+  text-transform: capitalize;
+}
+
+.status.pending {
+  color: #ffc107;
+  font-weight: bold;
+  text-transform: capitalize;
 }
 
 /* Additional responsive design */

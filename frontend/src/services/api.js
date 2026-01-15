@@ -67,7 +67,7 @@ export const instructorAPI = {
   }),
   deleteCourse: (courseId) => api.delete(`/instructor/courses/${courseId}`),
   getNotifications: () => api.get('/instructor/notifications'),
-  markNotificationRead: (notificationId) => api.put(`/instructor/notifications/${notificationId}/read`),
+  getCourseContent: (courseId) => api.get(`/instructor/courses/${courseId}/content`),
 };
 
 // Student API

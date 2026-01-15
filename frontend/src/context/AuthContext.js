@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     delete axios.defaults.headers.common['Authorization'];
     dispatch({ type: 'LOGOUT' });
+    window.location.href = '/';
   };
 
   return (

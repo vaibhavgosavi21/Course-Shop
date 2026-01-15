@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      window.history.replaceState(null, '', '/');
+    }
+  }, [isAuthenticated, loading]);
 
   if (loading) {
     return <div className="loading">Loading...</div>;
