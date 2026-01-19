@@ -4,6 +4,8 @@ const upload = require('../utils/upload');
 const {
   addCourse,
   getMyCourses,
+  getMyApprovedCourses,
+  getMyPendingCourses,
   updateCourse,
   deleteCourse,
   getNotifications,
@@ -19,6 +21,8 @@ router.use(auth, authorize('instructor'));
 
 router.post('/courses', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'courseContent', maxCount: 1 }]), addCourse);
 router.get('/courses/all', getAllCourses);
+router.get('/courses/approved', getMyApprovedCourses);
+router.get('/courses/pending', getMyPendingCourses);
 router.delete('/courses/:courseId', deleteCourse);
 router.get('/courses', getMyCourses);
 router.put('/courses/:courseId', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'courseContent', maxCount: 1 }]), updateCourse);

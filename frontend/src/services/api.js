@@ -53,6 +53,11 @@ export const adminAPI = {
   rejectCourse: (courseId, reason) => api.put(`/admin/courses/${courseId}/reject`, { reason }),
   removeCourse: (courseId) => api.delete(`/admin/courses/${courseId}`),
   getTransactions: () => api.get('/admin/transactions'),
+  addInstructor: (data) => api.post('/admin/instructors', data),
+  removeInstructor: (instructorId) => api.delete(`/admin/instructors/${instructorId}`),
+  updateStudent: (studentId, data) => api.put(`/admin/students/${studentId}`, data),
+  removeStudent: (studentId) => api.delete(`/admin/students/${studentId}`),
+  getCourseContent: (courseId) => api.get(`/admin/courses/${courseId}/content`),
 };
 
 // Instructor API
@@ -61,12 +66,15 @@ export const instructorAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getMyCourses: () => api.get('/instructor/courses'),
+  getMyApprovedCourses: () => api.get('/instructor/courses/approved'),
+  getMyPendingCourses: () => api.get('/instructor/courses/pending'),
   getAllCourses: (search = '') => api.get(`/instructor/courses/all?search=${encodeURIComponent(search)}`),
   updateCourse: (courseId, formData) => api.put(`/instructor/courses/${courseId}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   deleteCourse: (courseId) => api.delete(`/instructor/courses/${courseId}`),
   getNotifications: () => api.get('/instructor/notifications'),
+  markNotificationRead: (notificationId) => api.put(`/instructor/notifications/${notificationId}/read`),
   getCourseContent: (courseId) => api.get(`/instructor/courses/${courseId}/content`),
 };
 
@@ -76,7 +84,9 @@ export const studentAPI = {
   getAllCourses: (search = '') => api.get(`/student/courses/all?search=${encodeURIComponent(search)}`),
   createPaymentIntent: (courseId) => api.post('/student/payment/create-intent', { courseId }),
   confirmPayment: (paymentIntentId) => api.post('/student/payment/confirm', { paymentIntentId }),
+  directPurchase: (courseId) => api.post('/student/purchase', { courseId }),
   getPurchaseHistory: () => api.get('/student/purchases'),
+  getCourseContent: (courseId) => api.get(`/student/courses/${courseId}/content`),
 };
 
 export default api;

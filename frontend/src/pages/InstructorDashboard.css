@@ -1,35 +1,92 @@
 .instructor-dashboard {
   min-height: 100vh;
-  background: #f5f5f5;
 }
 
 .dashboard-header {
   background: white;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
 }
 
 .dashboard-header h1 {
   margin: 0;
-  color: #333;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.header-actions {
+.header-right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.logout-btn {
-  background: #dc3545;
+.user-info {
+  text-align: right;
+}
+
+.user-name {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.user-role {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #10b981;
   color: white;
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.logout-btn {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
   padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .dashboard-nav {
@@ -395,4 +452,20 @@
 .status-badge.active {
   background: #28a745;
   color: white;
+}
+
+
+.no-courses-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  color: #718096;
+  font-size: 1.1rem;
+}
+
+.no-courses-message p {
+  margin: 0;
 }

@@ -1,6 +1,8 @@
 const Course = require('../models/Course');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { sendPurchaseEmail } = require('../utils/emailService');
 
 const getApprovedCourses = async (req, res) => {
   try {
@@ -24,7 +26,7 @@ const getApprovedCourses = async (req, res) => {
 const getAllCourses = async (req, res) => {
   try {
     const { search } = req.query;
-    let query = {};
+    let query = { status: 'approved' };
     
     if (search) {
       query.courseName = { $regex: search, $options: 'i' };
@@ -109,7 +111,7 @@ const getPurchaseHistory = async (req, res) => {
       studentId: req.user._id,
       status: 'success'
     })
-    .populate('courseId', 'courseName price imageUrl')
+    .populate('courseId', 'courseName price imageUrl courseContentUrl')
     .sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
@@ -122,12 +124,11 @@ const directPurchase = async (req, res) => {
   try {
     const { courseId } = req.body;
     
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate('instructorId', 'name');
     if (!course || course.status !== 'approved') {
       return res.status(404).json({ message: 'Course not found or not available' });
     }
 
-    // Check if student already purchased this course
     const existingOrder = await Order.findOne({
       studentId: req.user._id,
       courseId: courseId,
@@ -145,6 +146,13 @@ const directPurchase = async (req, res) => {
       amount: course.price,
       status: 'success'
     });
+
+    // Send purchase confirmation email
+    try {
+      await sendPurchaseEmail(req.user.email, req.user.name, course.courseName, course.price);
+    } catch (emailError) {
+      console.error('Email send failed:', emailError);
+    }
 
     res.json({
       success: true,

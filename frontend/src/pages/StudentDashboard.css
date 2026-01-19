@@ -1,26 +1,27 @@
 .student-dashboard {
   min-height: 100vh;
-  background: #f5f5f5;
 }
 
 .dashboard-header {
-  background: white;
+  background: rgba(26, 32, 44, 0.95);
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  backdrop-filter: blur(10px);
 }
 
 .dashboard-header h1 {
   margin: 0;
-  color: #333;
+  color: white;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
+  color: white;
 }
 
 .logout-btn {
@@ -466,4 +467,55 @@
 
 .access-btn:hover {
   background: #218838;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.user-name {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.user-role {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
 }

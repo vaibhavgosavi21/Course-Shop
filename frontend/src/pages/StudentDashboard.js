@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { studentAPI } from '../services/api';
 import { getImageUrl } from '../utils/helpers';
 import scannerImage from '../assets/images/Scanner.jfif';
+import linkLogo from '../assets/logos/linklogo.png';
+import ContentViewer from '../components/ContentViewer';
+import Footer from '../components/Footer';
 import './StudentDashboard.css';
 
 const PaymentForm = ({ course, onSuccess, onCancel }) => {
@@ -64,6 +67,7 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('courses');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [viewingContent, setViewingContent] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -105,23 +109,23 @@ const StudentDashboard = () => {
 
   const handleAccessContent = async (contentUrl) => {
     if (contentUrl) {
-      window.open(`http://localhost:5001${contentUrl}`, '_blank');
+      setViewingContent(contentUrl);
     } else {
       toast.info('No course content available');
     }
   };
 
-  const handlePurchaseSuccess = () => {
-    // Add the purchased course to local state
-    const newPurchase = {
-      _id: Date.now().toString(),
-      courseId: selectedCourse,
-      amount: selectedCourse.price,
-      status: 'success',
-      createdAt: new Date().toISOString()
-    };
-    setPurchases(prev => [newPurchase, ...prev]);
-    setSelectedCourse(null);
+  const handlePurchaseSuccess = async () => {
+    try {
+      const response = await studentAPI.directPurchase(selectedCourse._id);
+      if (response.data.success) {
+        toast.success('Course purchased successfully!');
+        loadData();
+        setSelectedCourse(null);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Purchase failed');
+    }
   };
 
   const isPurchased = (courseId) => {
@@ -131,9 +135,18 @@ const StudentDashboard = () => {
   return (
     <div className="student-dashboard">
       <header className="dashboard-header">
-        <h1>Student Dashboard</h1>
-        <div className="header-actions">
-          <span>Welcome, {user?.name}</span>
+        <div className="header-left">
+          <div className="logo">
+            <img src={linkLogo} alt="LinkCode" className="logo-image" />
+          </div>
+          <h1>STUDENT DASHBOARD</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+            <span className="user-name">{user?.name}</span>
+            <span className="user-role">Student</span>
+          </div>
+          <div className="user-avatar">{user?.name?.charAt(0)}</div>
           <button onClick={logout} className="logout-btn">Logout</button>
         </div>
       </header>
@@ -268,24 +281,48 @@ const StudentDashboard = () => {
                   <span>{purchases.length}</span>
                 </div>
                 <div className="info-row">
-                  <label>Total Spent:</label>
-                  <span>${purchases.reduce((total, purchase) => total + purchase.amount, 0)}</span>
-                </div>
-                <div className="info-row">
                   <label>Account Status:</label>
                   <span className="status-badge active">Active</span>
                 </div>
+              </div>
+              
+              <div className="profile-info" style={{marginTop: '2rem'}}>
+                <h3>Purchase History</h3>
+                {purchases.length === 0 ? (
+                  <p style={{textAlign: 'center', color: '#718096', padding: '2rem'}}>No purchases yet</p>
+                ) : (
+                  <div style={{maxHeight: '400px', overflowY: 'auto'}}>
+                    {purchases.map(purchase => (
+                      <div key={purchase._id} className="info-row" style={{flexDirection: 'column', alignItems: 'flex-start', padding: '1rem 0'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '0.5rem'}}>
+                          <strong>{purchase.courseId.courseName}</strong>
+                          <span style={{color: '#4facfe', fontWeight: 'bold'}}>${purchase.amount}</span>
+                        </div>
+                        <small style={{color: '#718096'}}>{new Date(purchase.createdAt).toLocaleDateString()}</small>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
       </main>
 
+      <Footer />
+
       {selectedCourse && (
         <PaymentForm
           course={selectedCourse}
           onSuccess={handlePurchaseSuccess}
           onCancel={() => setSelectedCourse(null)}
+        />
+      )}
+      
+      {viewingContent && (
+        <ContentViewer
+          contentUrl={viewingContent}
+          onClose={() => setViewingContent(null)}
         />
       )}
     </div>

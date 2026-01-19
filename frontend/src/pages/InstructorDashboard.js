@@ -3,6 +3,9 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { instructorAPI } from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
+import ContentViewer from '../components/ContentViewer';
+import Footer from '../components/Footer';
+import linkLogo from '../assets/logos/linklogo.png';
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
@@ -10,7 +13,7 @@ const InstructorDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [activeTab, setActiveTab] = useState('mycourses');
+  const [activeTab, setActiveTab] = useState('allcourses');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [formData, setFormData] = useState({
@@ -20,6 +23,7 @@ const InstructorDashboard = () => {
     courseContent: null
   });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, course: null });
+  const [viewingContent, setViewingContent] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -105,7 +109,7 @@ const InstructorDashboard = () => {
     try {
       const response = await instructorAPI.getCourseContent(courseId);
       if (response.data.success && response.data.contentUrl) {
-        window.open(`http://localhost:5001${response.data.contentUrl}`, '_blank');
+        setViewingContent(response.data.contentUrl);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Access denied');
@@ -145,14 +149,29 @@ const InstructorDashboard = () => {
   return (
     <div className="instructor-dashboard">
       <header className="dashboard-header">
-        <h1>Educator Dashboard</h1>
-        <div className="header-actions">
-          <span>Welcome, {user?.name}</span>
+        <div className="header-left">
+          <div className="logo">
+            <img src={linkLogo} alt="LinkCode" className="logo-image" />
+          </div>
+          <h1>EDUCATOR DASHBOARD</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+            <span className="user-name">{user?.name}</span>
+            <span className="user-role">Educator</span>
+          </div>
+          <div className="user-avatar">{user?.name?.charAt(0)}</div>
           <button onClick={logout} className="logout-btn">Logout</button>
         </div>
       </header>
 
       <nav className="dashboard-nav">
+        <button 
+          className={activeTab === 'allcourses' ? 'active' : ''}
+          onClick={() => setActiveTab('allcourses')}
+        >
+          All Courses
+        </button>
         <button 
           className={activeTab === 'mycourses' ? 'active' : ''}
           onClick={() => setActiveTab('mycourses')}
@@ -160,10 +179,10 @@ const InstructorDashboard = () => {
           My Courses
         </button>
         <button 
-          className={activeTab === 'allcourses' ? 'active' : ''}
-          onClick={() => setActiveTab('allcourses')}
+          className={activeTab === 'pending' ? 'active' : ''}
+          onClick={() => setActiveTab('pending')}
         >
-          Browse Courses
+          Pending Courses
         </button>
         <button 
           className={activeTab === 'notifications' ? 'active' : ''}
@@ -180,6 +199,33 @@ const InstructorDashboard = () => {
       </nav>
 
       <main className="dashboard-content">
+        {activeTab === 'allcourses' && (
+          <div className="courses-section">
+            <div className="section-header">
+              <h2>All Courses</h2>
+            </div>
+
+            <div className="courses-grid">
+              {allCourses.length === 0 ? (
+                <div className="no-courses-message">
+                  <p>No courses available from other educators.</p>
+                </div>
+              ) : (
+                allCourses.map(course => (
+                  <div key={course._id} className="course-card">
+                    <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                    <div className="course-info">
+                      <h3>{course.courseName}</h3>
+                      <p className="instructor">By: {course.instructorId.name}</p>
+                      <p className="price">${course.price}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'mycourses' && (
           <div className="courses-section">
             <div className="section-header">
@@ -251,70 +297,81 @@ const InstructorDashboard = () => {
             )}
 
             <div className="courses-grid">
-              {courses.map(course => (
-                <div key={course._id} className="course-card">
-                  <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
-                  <div className="course-info">
-                    <h3>{course.courseName}</h3>
-                    <p className="price">${course.price}</p>
-                    <p 
-                      className="status"
-                      style={{ color: getStatusColor(course.status) }}
-                    >
-                      Status: {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
-                    </p>
-                    <div className="course-actions">
-                      <button 
-                        onClick={() => handleEdit(course)}
-                        className="edit-btn"
+              {courses.length === 0 ? (
+                <div className="no-courses-message">
+                  <p>No courses yet. Add your first course!</p>
+                </div>
+              ) : (
+                courses.map(course => (
+                  <div key={course._id} className="course-card">
+                    <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                    <div className="course-info">
+                      <h3>{course.courseName}</h3>
+                      <p className="price">${course.price}</p>
+                      <p 
+                        className="status"
+                        style={{ color: getStatusColor(course.status) }}
                       >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(course)}
-                        className="delete-btn"
-                      >
-                        Delete
-                      </button>
-                      {course.courseContentUrl && (
+                        Status: {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+                      </p>
+                      <div className="course-actions">
                         <button 
-                          onClick={() => handleAccessContent(course._id)}
-                          className="access-btn"
+                          onClick={() => handleEdit(course)}
+                          className="edit-btn"
                         >
-                          Access Content
+                          Edit
                         </button>
-                      )}
+                        <button 
+                          onClick={() => handleDelete(course)}
+                          className="delete-btn"
+                        >
+                          Delete
+                        </button>
+                        {course.courseContentUrl && (
+                          <button 
+                            onClick={() => handleAccessContent(course._id)}
+                            className="access-btn"
+                          >
+                            Access Content
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {activeTab === 'allcourses' && (
+        {activeTab === 'pending' && (
           <div className="courses-section">
             <div className="section-header">
-              <h2>Browse Courses</h2>
+              <h2>Pending Courses</h2>
             </div>
 
             <div className="courses-grid">
-              {allCourses.map(course => (
-                <div key={course._id} className="course-card">
-                  <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
-                  <div className="course-info">
-                    <h3>{course.courseName}</h3>
-                    <p className="instructor">By: {course.instructorId.name}</p>
-                    <p className="price">${course.price}</p>
-                    <p 
-                      className="status"
-                      style={{ color: getStatusColor(course.status) }}
-                    >
-                      Status: {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
-                    </p>
-                  </div>
+              {courses.filter(c => c.status === 'pending').length === 0 ? (
+                <div className="no-courses-message">
+                  <p>No pending courses.</p>
                 </div>
-              ))}
+              ) : (
+                courses.filter(c => c.status === 'pending').map(course => (
+                  <div key={course._id} className="course-card">
+                    <img src={`http://localhost:5001${course.imageUrl}`} alt={course.courseName} />
+                    <div className="course-info">
+                      <h3>{course.courseName}</h3>
+                      <p className="price">${course.price}</p>
+                      <p 
+                        className="status"
+                        style={{ color: getStatusColor(course.status) }}
+                      >
+                        Status: Pending Approval
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -377,6 +434,8 @@ const InstructorDashboard = () => {
         )}
       </main>
       
+      <Footer />
+      
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title="Delete Course"
@@ -384,6 +443,13 @@ const InstructorDashboard = () => {
         onConfirm={confirmDelete}
         onCancel={() => setConfirmModal({ isOpen: false, course: null })}
       />
+      
+      {viewingContent && (
+        <ContentViewer
+          contentUrl={viewingContent}
+          onClose={() => setViewingContent(null)}
+        />
+      )}
     </div>
   );
 };

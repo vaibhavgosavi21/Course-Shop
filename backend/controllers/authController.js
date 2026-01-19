@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 const register = async (req, res) => {
   try {
@@ -23,6 +24,9 @@ const register = async (req, res) => {
 
     const user = new User({ name, email, mobile, password, role });
     await user.save();
+
+    // Send welcome email
+    await sendWelcomeEmail(email, name, role);
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 

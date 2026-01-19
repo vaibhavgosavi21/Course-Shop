@@ -18,6 +18,7 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 - Notification system for instructors
 - Transaction management
 - Course removal capabilities
+- Add/Remove instructors and students
 
 ### 👨‍🏫 Instructor Module
 - Course creation with image upload
@@ -25,6 +26,7 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 - Course approval status tracking
 - Notification system for admin feedback
 - Dashboard with course analytics
+- Email notifications for course approval/rejection
 
 ### 👨‍🎓 Student Module
 - Browse approved courses
@@ -32,6 +34,13 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 - Secure payment integration with Stripe
 - Purchase history tracking
 - Course access management
+- Email confirmation on successful purchase
+
+### 📧 Email Notifications
+- **Purchase Confirmation:** Sent to students after successful course purchase
+- **Course Approval:** Sent to instructors when course is approved
+- **Course Rejection:** Sent to instructors with admin feedback
+- Supports Gmail and Ethereal (test mode)
 
 ### 💳 Payment System
 - Stripe payment integration
@@ -50,6 +59,7 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 - **bcryptjs** - Password hashing
 - **Multer** - File upload
 - **Stripe** - Payment processing
+- **Nodemailer** - Email service
 
 ### Frontend
 - **React.js** - UI library
@@ -65,6 +75,7 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 - Node.js (v14 or higher)
 - MongoDB Atlas account
 - Stripe account (for payments)
+- Gmail account (optional, for email notifications)
 
 ### Backend Setup
 
@@ -81,14 +92,33 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 3. **Environment Configuration:**
    Create a `.env` file in the backend directory:
    ```env
-   PORT=5000
+   PORT=5001
    MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.mongodb.net/course-platform
    JWT_SECRET=your-super-secret-jwt-key-here
    STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
    NODE_ENV=development
+   
+   # Email Configuration (Optional - uses Ethereal test mode if not set)
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-gmail-app-password
    ```
 
-4. **Create Admin User:**
+4. **Setup MongoDB Atlas:**
+   - Go to https://cloud.mongodb.com/
+   - Navigate to "Network Access"
+   - Click "Add IP Address"
+   - Add 0.0.0.0/0 (Allow from anywhere)
+   - Wait 2-3 minutes for changes to apply
+
+5. **Setup Gmail (Optional):**
+   - Go to https://myaccount.google.com/apppasswords
+   - Enable 2-Step Verification
+   - Generate App Password for "Mail"
+   - Copy the 16-character password
+   - Add to .env as EMAIL_PASS
+   - **Note:** If not configured, system automatically uses Ethereal test email service
+
+6. **Create Admin User:**
    ```bash
    node createAdmin.js
    ```
@@ -96,11 +126,11 @@ A production-ready, role-based Course Selling & Buying Platform built with React
    - Email: admin@courseplatform.com
    - Password: admin123
 
-5. **Start Backend Server:**
+7. **Start Backend Server:**
    ```bash
    npm run dev
    ```
-   Server will run on http://localhost:5000
+   Server will run on http://localhost:5001
 
 ### Frontend Setup
 
@@ -117,7 +147,8 @@ A production-ready, role-based Course Selling & Buying Platform built with React
 3. **Environment Configuration:**
    Create a `.env` file in the frontend directory:
    ```env
-   REACT_APP_API_URL=http://localhost:5000/api
+   PORT=3001
+   REACT_APP_API_URL=http://localhost:5001/api
    REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
    ```
 
@@ -125,7 +156,25 @@ A production-ready, role-based Course Selling & Buying Platform built with React
    ```bash
    npm start
    ```
-   Application will run on http://localhost:3000
+   Application will run on http://localhost:3001
+
+## Quick Start (Windows)
+
+**Option 1: Use Startup Script**
+```bash
+Double-click: START_PROJECT.bat
+```
+
+**Option 2: Manual Start**
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm start
+```
 
 ## Database Schema
 

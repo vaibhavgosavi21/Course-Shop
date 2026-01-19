@@ -34,7 +34,14 @@ const addCourse = async (req, res) => {
 
 const getMyCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ instructorId: req.user._id });
+    const { status } = req.query;
+    let query = { instructorId: req.user._id };
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    const courses = await Course.find(query);
     res.json({ success: true, courses });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -127,6 +134,30 @@ const getAllCourses = async (req, res) => {
   }
 };
 
+const getMyApprovedCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ 
+      instructorId: req.user._id,
+      status: 'approved'
+    });
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getMyPendingCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ 
+      instructorId: req.user._id,
+      status: 'pending'
+    });
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const deleteCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -183,6 +214,8 @@ const getCourseContent = async (req, res) => {
 module.exports = {
   addCourse,
   getMyCourses,
+  getMyApprovedCourses,
+  getMyPendingCourses,
   updateCourse,
   deleteCourse,
   getNotifications,

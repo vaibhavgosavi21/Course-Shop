@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
+const { sendCourseApprovalEmail, sendCourseRejectionEmail } = require('../utils/emailService');
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -59,17 +60,23 @@ const approveCourse = async (req, res) => {
       courseId,
       { status: 'approved' },
       { new: true }
-    );
+    ).populate('instructorId', 'name email');
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // Send notification to instructor
     await Notification.create({
-      instructorId: course.instructorId,
+      instructorId: course.instructorId._id,
       message: `Your course "${course.courseName}" has been approved and is now live!`
     });
+
+    // Send approval email
+    try {
+      await sendCourseApprovalEmail(course.instructorId.email, course.instructorId.name, course.courseName);
+    } catch (emailError) {
+      console.error('Email send failed:', emailError);
+    }
 
     res.json({ success: true, message: 'Course approved successfully' });
   } catch (error) {
@@ -86,17 +93,23 @@ const rejectCourse = async (req, res) => {
       courseId,
       { status: 'rejected' },
       { new: true }
-    );
+    ).populate('instructorId', 'name email');
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // Send notification to instructor
     await Notification.create({
-      instructorId: course.instructorId,
+      instructorId: course.instructorId._id,
       message: `Your course "${course.courseName}" has been rejected. Reason: ${reason || 'No reason provided'}`
     });
+
+    // Send rejection email
+    try {
+      await sendCourseRejectionEmail(course.instructorId.email, course.instructorId.name, course.courseName, reason);
+    } catch (emailError) {
+      console.error('Email send failed:', emailError);
+    }
 
     res.json({ success: true, message: 'Course rejected successfully' });
   } catch (error) {
@@ -148,6 +161,84 @@ const getCourseContent = async (req, res) => {
   }
 };
 
+const addInstructor = async (req, res) => {
+  try {
+    const { name, email, mobile, password } = req.body;
+    
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    const instructor = await User.create({
+      name,
+      email,
+      mobile,
+      password,
+      role: 'instructor'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Instructor added successfully',
+      instructor: { _id: instructor._id, name: instructor.name, email: instructor.email }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const removeInstructor = async (req, res) => {
+  try {
+    const { instructorId } = req.params;
+    
+    const instructor = await User.findOneAndDelete({ _id: instructorId, role: 'instructor' });
+    if (!instructor) {
+      return res.status(404).json({ message: 'Instructor not found' });
+    }
+
+    res.json({ success: true, message: 'Instructor removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateStudent = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { name, email, mobile } = req.body;
+    
+    const student = await User.findOneAndUpdate(
+      { _id: studentId, role: 'student' },
+      { name, email, mobile },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json({ success: true, message: 'Student updated successfully', student });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const removeStudent = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    const student = await User.findOneAndDelete({ _id: studentId, role: 'student' });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json({ success: true, message: 'Student removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getAllCourses = async (req, res) => {
   try {
     const { search } = req.query;
@@ -177,5 +268,9 @@ module.exports = {
   rejectCourse,
   removeCourse,
   getAllTransactions,
-  getCourseContent
+  getCourseContent,
+  addInstructor,
+  removeInstructor,
+  updateStudent,
+  removeStudent
 };

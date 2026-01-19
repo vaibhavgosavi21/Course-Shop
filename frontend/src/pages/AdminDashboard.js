@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
+import ContentViewer from '../components/ContentViewer';
 import Footer from '../components/Footer';
 import './AdminDashboard.css';
 
@@ -17,6 +18,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, courseId: null, courseName: '' });
   const [rejectModal, setRejectModal] = useState({ isOpen: false, courseId: null, reason: '' });
+  const [addInstructorModal, setAddInstructorModal] = useState(false);
+  const [instructorForm, setInstructorForm] = useState({ name: '', email: '', mobile: '', password: '' });
+  const [viewingContent, setViewingContent] = useState(null);
+  const [editStudentModal, setEditStudentModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -77,9 +83,68 @@ const AdminDashboard = () => {
 
   const handleAccessContent = async (courseId, contentUrl) => {
     if (contentUrl) {
-      window.open(`http://localhost:5001${contentUrl}`, '_blank');
+      setViewingContent(contentUrl);
     } else {
       toast.info('No course content available');
+    }
+  };
+
+  const handleAddInstructor = async (e) => {
+    e.preventDefault();
+    try {
+      await adminAPI.addInstructor(instructorForm);
+      toast.success('Instructor added successfully');
+      setAddInstructorModal(false);
+      setInstructorForm({ name: '', email: '', mobile: '', password: '' });
+      loadDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add instructor');
+    }
+  };
+
+  const handleRemoveInstructor = async (instructorId) => {
+    if (window.confirm('Are you sure you want to remove this instructor?')) {
+      try {
+        await adminAPI.removeInstructor(instructorId);
+        toast.success('Instructor removed successfully');
+        loadDashboardData();
+      } catch (error) {
+        toast.error('Failed to remove instructor');
+      }
+    }
+  };
+
+  const handleEditStudent = (student) => {
+    setEditingStudent(student);
+    setEditStudentModal(true);
+  };
+
+  const handleUpdateStudent = async (e) => {
+    e.preventDefault();
+    try {
+      await adminAPI.updateStudent(editingStudent._id, {
+        name: editingStudent.name,
+        email: editingStudent.email,
+        mobile: editingStudent.mobile
+      });
+      toast.success('Student updated successfully');
+      setEditStudentModal(false);
+      setEditingStudent(null);
+      loadDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update student');
+    }
+  };
+
+  const handleRemoveStudent = async (studentId) => {
+    if (window.confirm('Are you sure you want to remove this student?')) {
+      try {
+        await adminAPI.removeStudent(studentId);
+        toast.success('Student removed successfully');
+        loadDashboardData();
+      } catch (error) {
+        toast.error('Failed to remove student');
+      }
     }
   };
 
@@ -100,88 +165,92 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-wrapper">
-      <header className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <div className="header-actions">
-          <span>Welcome, {user?.name}</span>
-          <button onClick={logout} className="logout-btn">Logout</button>
-        </div>
-      </header>
-
-      <nav className="dashboard-nav">
-        <button 
-          className={activeTab === 'dashboard' ? 'active' : ''}
-          onClick={() => setActiveTab('dashboard')}
-        >
-          Dashboard
-        </button>
-        <button 
-          className={activeTab === 'courses' ? 'active' : ''}
-          onClick={() => setActiveTab('courses')}
-        >
-          Pending Courses
-        </button>
-        <button 
-          className={activeTab === 'allcourses' ? 'active' : ''}
-          onClick={() => setActiveTab('allcourses')}
-        >
-          All Courses
-        </button>
-        <button 
-          className={activeTab === 'instructors' ? 'active' : ''}
-          onClick={() => setActiveTab('instructors')}
-        >
-          Educators
-        </button>
-        <button 
-          className={activeTab === 'students' ? 'active' : ''}
-          onClick={() => setActiveTab('students')}
-        >
-          Students
-        </button>
-        <button 
-          className={activeTab === 'transactions' ? 'active' : ''}
-          onClick={() => setActiveTab('transactions')}
-        >
-          Transactions
-        </button>
-        <button 
-          className={activeTab === 'profile' ? 'active' : ''}
-          onClick={() => setActiveTab('profile')}
-        >
-          Profile
-        </button>
-      </nav>
-
-      <main className="dashboard-content">
-        {activeTab === 'dashboard' && (
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3>Total Students</h3>
-              <p>{stats.totalStudents || 0}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Total Educators</h3>
-              <p>{stats.totalInstructors || 0}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Total Courses</h3>
-              <p>{stats.totalCourses || 0}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Total Transactions</h3>
-              <p>{stats.totalTransactions || 0}</p>
-            </div>
+    <div className="page-container">
+      <div className="nav-header">
+        <div className="nav-container">
+          <h1 className="dashboard-title">Admin Dashboard</h1>
+          <div className="header-actions">
+            <span className="text-secondary">Welcome, {user?.name}</span>
+            <button onClick={logout} className="btn btn-outline">Logout</button>
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="content-wrapper" style={{paddingTop: '100px'}}>
+        <nav className="dashboard-nav mb-3">
+          <button 
+            className={`btn ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            Dashboard
+          </button>
+          <button 
+            className={`btn ${activeTab === 'courses' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('courses')}
+          >
+            Pending Courses
+          </button>
+          <button 
+            className={`btn ${activeTab === 'allcourses' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('allcourses')}
+          >
+            All Courses
+          </button>
+          <button 
+            className={`btn ${activeTab === 'instructors' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('instructors')}
+          >
+            Educators
+          </button>
+          <button 
+            className={`btn ${activeTab === 'students' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('students')}
+          >
+            Students
+          </button>
+          <button 
+            className={`btn ${activeTab === 'transactions' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('transactions')}
+          >
+            Transactions
+          </button>
+          <button 
+            className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setActiveTab('profile')}
+          >
+            Profile
+          </button>
+        </nav>
+
+        <main className="dashboard-content">
+          {activeTab === 'dashboard' && (
+            <div className="grid grid-4">
+              <div className="stat-card">
+                <div className="stat-number">{stats.totalStudents || 0}</div>
+                <div className="stat-label">Total Students</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">{stats.totalInstructors || 0}</div>
+                <div className="stat-label">Total Educators</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">{stats.totalCourses || 0}</div>
+                <div className="stat-label">Total Courses</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">{stats.totalTransactions || 0}</div>
+                <div className="stat-label">Total Transactions</div>
+              </div>
+            </div>
+          )}
 
         {activeTab === 'courses' && (
           <div className="courses-section">
             <h2>Pending Course Approvals</h2>
             {pendingCourses.length === 0 ? (
-              <p>No pending courses</p>
+              <div className="no-courses-message">
+                <p>No pending courses.</p>
+              </div>
             ) : (
               <div className="courses-grid">
                 {pendingCourses.map(course => (
@@ -280,7 +349,12 @@ const AdminDashboard = () => {
 
         {activeTab === 'instructors' && (
           <div className="users-section">
-            <h2>All Educators</h2>
+            <div className="section-header">
+              <h2>All Educators</h2>
+              <button onClick={() => setAddInstructorModal(true)} className="add-btn">
+                Add Educator
+              </button>
+            </div>
             <div className="users-table">
               <table>
                 <thead>
@@ -289,6 +363,7 @@ const AdminDashboard = () => {
                     <th>Email</th>
                     <th>Mobile</th>
                     <th>Joined</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -298,6 +373,14 @@ const AdminDashboard = () => {
                       <td>{instructor.email}</td>
                       <td>{instructor.mobile}</td>
                       <td>{new Date(instructor.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <button 
+                          onClick={() => handleRemoveInstructor(instructor._id)}
+                          className="remove-btn"
+                        >
+                          Remove
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -317,6 +400,7 @@ const AdminDashboard = () => {
                     <th>Email</th>
                     <th>Mobile</th>
                     <th>Joined</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -326,6 +410,21 @@ const AdminDashboard = () => {
                       <td>{student.email}</td>
                       <td>{student.mobile}</td>
                       <td>{new Date(student.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <button 
+                          onClick={() => handleEditStudent(student)}
+                          className="edit-btn"
+                          style={{marginRight: '0.5rem'}}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleRemoveStudent(student._id)}
+                          className="remove-btn"
+                        >
+                          Remove
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -428,6 +527,108 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+      
+      {addInstructorModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Add New Educator</h3>
+            <form onSubmit={handleAddInstructor}>
+              <input
+                type="text"
+                placeholder="Name"
+                value={instructorForm.name}
+                onChange={(e) => setInstructorForm({...instructorForm, name: e.target.value})}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={instructorForm.email}
+                onChange={(e) => setInstructorForm({...instructorForm, email: e.target.value})}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Mobile (10 digits)"
+                value={instructorForm.mobile}
+                onChange={(e) => setInstructorForm({...instructorForm, mobile: e.target.value})}
+                required
+                pattern="[0-9]{10}"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={instructorForm.password}
+                onChange={(e) => setInstructorForm({...instructorForm, password: e.target.value})}
+                required
+                minLength="6"
+              />
+              <div className="modal-actions">
+                <button type="submit" className="confirm-btn">Add Educator</button>
+                <button 
+                  type="button" 
+                  onClick={() => setAddInstructorModal(false)}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {editStudentModal && editingStudent && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Edit Student</h3>
+            <form onSubmit={handleUpdateStudent}>
+              <input
+                type="text"
+                placeholder="Name"
+                value={editingStudent.name}
+                onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={editingStudent.email}
+                onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Mobile (10 digits)"
+                value={editingStudent.mobile}
+                onChange={(e) => setEditingStudent({...editingStudent, mobile: e.target.value})}
+                required
+                pattern="[0-9]{10}"
+              />
+              <div className="modal-actions">
+                <button type="submit" className="confirm-btn">Update Student</button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setEditStudentModal(false);
+                    setEditingStudent(null);
+                  }}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {viewingContent && (
+        <ContentViewer
+          contentUrl={viewingContent}
+          onClose={() => setViewingContent(null)}
+        />
       )}
     </div>
   );

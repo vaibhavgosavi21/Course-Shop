@@ -6,12 +6,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import AdminDashboard from './pages/AdminDashboard';
 import InstructorDashboard from './pages/InstructorDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 
+import './theme.css';
 import './App.css';
 
 function App() {
@@ -21,7 +23,8 @@ function App() {
         <div className="App">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/landing" element={<LandingPage />} />
             <Route path="/auth/:role" element={<AuthPage />} />
             
             {/* Protected Routes */}

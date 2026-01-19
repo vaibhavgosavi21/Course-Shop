@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
+import linkLogo from '../assets/logos/linklogo.png';
 import './AuthPage.css';
 
 const AuthPage = () => {
@@ -58,77 +59,108 @@ const AuthPage = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-container">
-        <h2>
-          {role === 'instructor' ? 'Educator' : role.charAt(0).toUpperCase() + role.slice(1)} 
-          {isLogin ? ' Login' : ' Register'}
-        </h2>
-        
-        <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <>
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="tel"
-                name="mobile"
-                placeholder="Mobile Number (10 digits)"
-                value={formData.mobile}
-                onChange={handleChange}
-                pattern="[6-9][0-9]{9}"
-                required
-              />
-            </>
-          )}
-          
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          
-          <input
-            type="password"
-            name="password"
-            placeholder="Password (min 6 characters)"
-            value={formData.password}
-            onChange={handleChange}
-            minLength="6"
-            required
-          />
-          
-          <button type="submit" disabled={loading}>
-            {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
+      <div className="nav-header">
+        <div className="nav-container">
+          <img src={linkLogo} alt="Linkcode" className="nav-logo" />
+          <button className="btn btn-outline" onClick={() => navigate('/')}>
+            Back to Home
           </button>
-        </form>
-        
-        {role !== 'admin' && (
-          <p>
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <span 
-              className="toggle-link" 
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setFormData({ name: '', email: '', mobile: '', password: '', role });
-              }}
-            >
-              {isLogin ? 'Register' : 'Login'}
-            </span>
-          </p>
-        )}
-        
-        <button className="back-btn" onClick={() => navigate('/')}>
-          Back to Home
-        </button>
+        </div>
+      </div>
+      
+      <div className="auth-content">
+        <div className="auth-container">
+          <div className="card">
+            <div className="card-header text-center">
+              <h2 className="card-title">
+                {role === 'instructor' ? 'Educator' : role.charAt(0).toUpperCase() + role.slice(1)} 
+                {isLogin ? ' Login' : ' Register'}
+              </h2>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              {!isLogin && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      className="form-input"
+                      placeholder="Enter your full name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Mobile Number</label>
+                    <input
+                      type="tel"
+                      name="mobile"
+                      className="form-input"
+                      placeholder="Enter 10-digit mobile number"
+                      value={formData.mobile}
+                      onChange={handleChange}
+                      pattern="[0-9]{10}"
+                      maxLength="10"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              
+              <div className="form-group">
+                <label className="form-label">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="form-input"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  className="form-input"
+                  placeholder="Enter password (min 6 characters)"
+                  value={formData.password}
+                  onChange={handleChange}
+                  minLength="6"
+                  required
+                />
+              </div>
+              
+              <button type="submit" className="btn btn-primary" style={{width: '100%'}} disabled={loading}>
+                {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
+              </button>
+            </form>
+            
+            {role !== 'admin' && (
+              <div className="text-center mt-2">
+                <p className="text-secondary">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  <span 
+                    className="toggle-link text-primary" 
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setFormData({ name: '', email: '', mobile: '', password: '', role });
+                    }}
+                    style={{cursor: 'pointer', textDecoration: 'underline'}}
+                  >
+                    {isLogin ? 'Register' : 'Login'}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

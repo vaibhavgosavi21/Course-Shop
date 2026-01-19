@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './Loading.css';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -12,7 +13,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }, [isAuthenticated, loading]);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading">
+        Loading...
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
